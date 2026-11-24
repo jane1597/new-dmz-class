@@ -17,6 +17,7 @@ public final class ProdigyCfg {
     public static final ForgeConfigSpec.DoubleValue TP_BONUS;
     public static final ForgeConfigSpec.BooleanValue REGENERATE;
     public static final ForgeConfigSpec.ConfigValue<String> SCALING_MODE;
+    public static final ForgeConfigSpec.BooleanValue AUTO_SYNC;
 
     static {
         ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
@@ -27,7 +28,7 @@ public final class ProdigyCfg {
                 "Only used when the class is first written to config/dragonminez/races/<race>/stats.json.",
                 "After that, edit the numbers in those files (class \"prodigy\") or delete the entry to make it again.")
                 .defineInRange("startingStat", 10, 0, 100000);
-        MASTERY_BONUS = b.comment("Extra form mastery gain for Prodigy. 0.5 = +50%. DragonMineZ only supports steps of 0.25, so it is rounded to the nearest step.")
+        MASTERY_BONUS = b.comment("Extra form mastery gain for Prodigy. 0.5 = +50%. Works like the Mutant bonus: it multiplies on top of potions and racial bonuses.")
                 .defineInRange("formMasteryBonus", 0.5, 0.0, 10.0);
         PASSIVES = b.comment("Which class passives a Prodigy gets. All 8 by default.",
                 "Keys: warrior, martialartist, spiritualist, berserker, paladin, tank, cleric, unversed")
@@ -44,6 +45,9 @@ public final class ProdigyCfg {
                 "MAX = for every number, the highest value any class has (Prodigy is never weaker than any class).",
                 "SUM = all 8 classes added together (extremely strong).")
                 .define("scalingMode", "MAX");
+        AUTO_SYNC = b.comment("true = every start, the Prodigy entry in every race's stats.json is rewritten from the other classes (best scaling, 10 stats, TP gain).",
+                "So changes from this mod's updates and config always apply. Set to false if you want to edit the Prodigy numbers by hand in stats.json.")
+                .define("autoSyncClassEntry", true);
         SPEC = b.build();
     }
 }

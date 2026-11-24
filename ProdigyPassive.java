@@ -1,7 +1,7 @@
 package com.dmzprodigy;
 
 import com.dragonminez.common.events.DMZEvent;
-import com.dragonminez.common.init.MainEffects;
+import com.dragonminez.common.config.ConfigManager;
 import com.dragonminez.common.passives.IClassPassive;
 import com.dragonminez.common.passives.handlers.BerserkerPassive;
 import com.dragonminez.common.passives.handlers.ClericPassive;
@@ -13,9 +13,11 @@ import com.dragonminez.common.passives.handlers.WarriorPassive;
 import com.dragonminez.common.stats.StatsData;
 import com.dragonminez.common.stats.techniques.KiAttackData;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 import java.util.List;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 
 /**
@@ -54,24 +56,52 @@ public class ProdigyPassive implements IClassPassive {
     }
 
     @Override
-    public void onPlayerTick(ServerPlayer player, StatsData data) {
-        for (IClassPassive p : parts()) p.onPlayerTick(player, data);
-    }
-
-    @Override
     public void onPlayerSecond(ServerPlayer player, StatsData data) {
         for (IClassPassive p : parts()) p.onPlayerSecond(player, data);
-        applyMastery(player);
     }
 
-    /** hidden DragonMineZ "mastery gain" effect: amplifier 1 = +50% (each step is +25%) */
-    private static void applyMastery(ServerPlayer player) {
+    // Mastery bonus: like the Mutant bonus it is a separate multiplier, so it stacks with potions and racial bonuses.
+    // Every tick we look at what DragonMineZ added to the player's form masteries and add the bonus % of that on top.
+    private final Map<UUID, Map<String, Double>> lastMastery = new HashMap<>();
+
+    @Override
+    public void onPlayerTick(ServerPlayer player, StatsData data) {
+        for (IClassPassive p : parts()) p.onPlayerTick(player, data);
+        masteryBonus(player, data);
+    }
+
+    private void masteryBonus(ServerPlayer player, StatsData data) {
         double bonus = ProdigyCfg.MASTERY_BONUS.get();
-        if (bonus <= 0.0) return;
-        int amp = (int) Math.max(0, Math.round(bonus / 0.25) - 1);
-        MobEffectInstance cur = player.getEffect(MainEffects.MASTERY_GAIN.get());
-        if (cur != null && cur.getAmplifier() >= amp && cur.getDuration() > 40) return;
-        player.addEffect(new MobEffectInstance(MainEffects.MASTERY_GAIN.get(), 100, amp, false, false, false));
+        if (bonus <= 0.0 || data == null || data.getCharacter() == null) return;
+        var ch = data.getCharacter();
+        Map<String, Double> prev = lastMastery.get(player.getUUID());
+        Map<String, Double> now = new HashMap<>();
+        boolean first = prev == null;
+        String race = ch.getRaceName();
+        scan(ch.getFormMasteries(), false, race, bonus, first ? null : prev, now);
+        scan(ch.getStackFormMasteries(), true, race, bonus, first ? null : prev, now);
+        lastMastery.put(player.getUUID(), now);
+    }
+
+    private static void scan(com.dragonminez.common.stats.extras.FormMasteries fm, boolean stack, String race, double bonus,
+                             Map<String, Double> prev, Map<String, Double> now) {
+        if (fm == null) return;
+        for (Map.Entry<String, Double> en : fm.entries().entrySet()) {
+            String id = (stack ? "s|" : "f|") + en.getKey();
+            double cur = en.getValue();
+            Double old = prev == null ? null : prev.get(id);
+            if (old != null && cur > old + 1.0e-9) {
+                int c = en.getKey().indexOf(':');
+                if (c > 0) {
+                    String group = en.getKey().substring(0, c), form = en.getKey().substring(c + 1);
+                    var fd = stack ? ConfigManager.getStackForm(group, form) : ConfigManager.getForm(race, group, form);
+                    double max = fd != null ? fd.getMaxMastery() : 100.0;
+                    fm.addMastery(group, form, (cur - old) * bonus, max);
+                    cur = fm.entries().getOrDefault(en.getKey(), cur);
+                }
+            }
+            now.put(id, cur);
+        }
     }
 
     @Override

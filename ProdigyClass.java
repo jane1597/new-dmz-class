@@ -23,6 +23,11 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.common.MinecraftForge;
+import com.mojang.brigadier.CommandDispatcher;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.eventbus.api.EventPriority;
@@ -57,7 +62,7 @@ public class ProdigyClass {
 
     private void setup(FMLCommonSetupEvent e) {
         // DragonMineZ keeps its passives in a plain map, so this is safe from any thread
-        e.enqueueWork(() -> ClassPassives.register(new ProdigyPassive()));
+        e.enqueueWork(() -> { ClassPassives.register(new ProdigyPassive()); LOG.info("[Prodigy] Passive registered."); });
     }
 
     // ------------------------------------------------------------------ class entry in the config files
@@ -72,7 +77,7 @@ public class ProdigyClass {
             LOG.error("[Prodigy] Could not add the class to the DragonMineZ files", ex);
             return;
         }
-        LOG.info("[Prodigy] Added the Prodigy class to {} race file(s).", changed);
+        LOG.info("[Prodigy] Wrote/updated the Prodigy class in {} race file(s).", changed);
         if (changed > 0 && ProdigyCfg.RELOAD.get()) {
             MinecraftServer server = e.getServer();
             try {
@@ -186,14 +191,32 @@ public class ProdigyClass {
             }
             if (!root.has("classes") || !root.get("classes").isJsonObject()) continue;
             JsonObject classes = root.getAsJsonObject("classes");
-            if (classes.has(ProdigyPassive.KEY) && !ProdigyCfg.REGENERATE.get()) continue;
+            if (classes.has(ProdigyPassive.KEY) && !(ProdigyCfg.REGENERATE.get() || ProdigyCfg.AUTO_SYNC.get())) continue;
             JsonObject made = buildClass(classes);
             if (made == null) continue;
+            JsonElement old = classes.get(ProdigyPassive.KEY);
+            if (made.equals(old)) continue;
             classes.add(ProdigyPassive.KEY, made);
             Files.writeString(f, GSON.toJson(root), StandardCharsets.UTF_8);
             changed++;
         }
         return changed;
+    }
+
+    @SubscribeEvent
+    public void onCommands(RegisterCommandsEvent e) {
+        CommandDispatcher<CommandSourceStack> d = e.getDispatcher();
+        d.register(Commands.literal("prodigy").then(Commands.literal("status").executes(ctx -> {
+            ServerPlayer p = ctx.getSource().getPlayerOrException();
+            StatsData sd = data(p);
+            String cls = sd == null ? "no DragonMineZ data" : String.valueOf(sd.getCharacter().getCharacterClass());
+            String active = sd == null ? "-" : ClassPassives.get(sd).classKey();
+            String msg = "[Prodigy] class=" + cls + " | active passive=" + (active.isEmpty() ? "NONE" : active)
+                    + " | form mastery bonus=+" + (int) Math.round(ProdigyCfg.MASTERY_BONUS.get() * 100) + "%";
+            ctx.getSource().sendSuccess(() -> Component.literal(msg), false);
+            LOG.info(msg);
+            return 1;
+        })));
     }
 
     // ------------------------------------------------------------------ Paladin party effects (copy of DragonMineZ's, for Prodigy)
