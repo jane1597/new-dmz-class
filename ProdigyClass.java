@@ -88,7 +88,7 @@ public class ProdigyClass {
         return el != null && el.isJsonPrimitive() && el.getAsJsonPrimitive().isNumber() ? el.getAsDouble() : Double.NaN;
     }
 
-    /** class entry: 10 in every base stat, everything else is the average of the 8 normal classes (a balanced middle) */
+    /** class entry: 10 in every base stat, everything else is the the BEST value of the 8 normal classes for every scaling number */
     static JsonObject buildClass(JsonObject classes) {
         List<JsonObject> src = new ArrayList<>();
         for (String k : BASE) {
@@ -102,8 +102,8 @@ public class ProdigyClass {
         for (String s : new String[]{"STR", "SKP", "RES", "VIT", "PWR", "ENE"}) base.addProperty(s, ProdigyCfg.STAT_VALUE.get());
         out.add("baseStats", base);
 
-        // equal footing: scaling is the average of the 8 classes; TP gain comes from the hidden effect, not from here
-        // statScaling: average of every key the classes have
+        // scaling is the best of the 8 classes per stat (config scalingMode MAX or SUM); TP gain is DragonMineZ's own class TP multiplier (stacks with racial/mutant/potion boosts)
+        // statScaling: best of every key the classes have
         JsonObject sc = new JsonObject();
         for (String key : keys(src, "statScaling")) sc.addProperty(key, avg(src, "statScaling", key));
         out.add("statScaling", sc);
@@ -113,7 +113,7 @@ public class ProdigyClass {
             double v = avg(src, null, key);
             if (!Double.isNaN(v)) out.addProperty(key, v);
         }
-        out.addProperty("tpGainMultiplier", 1.0);
+        out.addProperty("tpGainMultiplier", 1.0 + ProdigyCfg.TP_BONUS.get());
         out.addProperty("tpCostMultiplier", 1.0);
 
         // passive: on, with every number of every class's passive (first one wins when two classes share a name)
@@ -147,16 +147,20 @@ public class ProdigyClass {
         return out;
     }
 
+    /** best value among the 8 classes (MAX) or all of them added together (SUM) */
     private static double avg(List<JsonObject> src, String sub, String key) {
-        double sum = 0;
-        int n = 0;
+        boolean sum = "SUM".equalsIgnoreCase(ProdigyCfg.SCALING_MODE.get());
+        double best = Double.NaN, total = 0;
         for (JsonObject c : src) {
             JsonObject o = sub == null ? c : c.has(sub) && c.get(sub).isJsonObject() ? c.getAsJsonObject(sub) : null;
             if (o == null) continue;
             double v = num(o.get(key));
-            if (!Double.isNaN(v)) { sum += v; n++; }
+            if (Double.isNaN(v)) continue;
+            total += v;
+            best = Double.isNaN(best) ? v : Math.max(best, v);
         }
-        return n == 0 ? Double.NaN : Math.round(sum / n * 10000.0) / 10000.0;
+        double r = sum ? total : best;
+        return Double.isNaN(r) ? r : Math.round(r * 10000.0) / 10000.0;
     }
 
     static int patch() throws IOException {

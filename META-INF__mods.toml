@@ -4,7 +4,7 @@ license="MIT"
 
 [[mods]]
 modId="dmzprodigy"
-version="1.1.0"
+version="1.2.0"
 displayName="DMZ Prodigy Class"
 description='''
 Adds the Prodigy class to DragonMineZ: 10 points in every stat, every other class passive combined into one, +50% form mastery gain and +25% TP gain.

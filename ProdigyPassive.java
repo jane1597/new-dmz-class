@@ -62,7 +62,6 @@ public class ProdigyPassive implements IClassPassive {
     public void onPlayerSecond(ServerPlayer player, StatsData data) {
         for (IClassPassive p : parts()) p.onPlayerSecond(player, data);
         applyMastery(player);
-        applyTp(player);
     }
 
     /** hidden DragonMineZ "mastery gain" effect: amplifier 1 = +50% (each step is +25%) */
@@ -73,16 +72,6 @@ public class ProdigyPassive implements IClassPassive {
         MobEffectInstance cur = player.getEffect(MainEffects.MASTERY_GAIN.get());
         if (cur != null && cur.getAmplifier() >= amp && cur.getDuration() > 40) return;
         player.addEffect(new MobEffectInstance(MainEffects.MASTERY_GAIN.get(), 100, amp, false, false, false));
-    }
-
-    /** hidden DragonMineZ "TP gain" effect: amplifier 0 = +25% */
-    private static void applyTp(ServerPlayer player) {
-        double bonus = ProdigyCfg.TP_BONUS.get();
-        if (bonus <= 0.0) return;
-        int amp = (int) Math.max(0, Math.round(bonus / 0.25) - 1);
-        MobEffectInstance cur = player.getEffect(MainEffects.TP_GAIN.get());
-        if (cur != null && cur.getAmplifier() >= amp && cur.getDuration() > 40) return;
-        player.addEffect(new MobEffectInstance(MainEffects.TP_GAIN.get(), 100, amp, false, false, false));
     }
 
     @Override
