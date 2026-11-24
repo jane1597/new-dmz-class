@@ -1,0 +1,32 @@
+modLoader="javafml"
+loaderVersion="[47,)"
+license="MIT"
+
+[[mods]]
+modId="dmzprodigy"
+version="1.0.0"
+displayName="DMZ Prodigy Class"
+description='''
+Adds the Prodigy class to DragonMineZ: 10 points in every stat, every other class passive combined into one, and +50% form mastery gain.
+'''
+
+[[dependencies.dmzprodigy]]
+modId="forge"
+mandatory=true
+versionRange="[47,)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.dmzprodigy]]
+modId="minecraft"
+mandatory=true
+versionRange="[1.20.1,1.21)"
+ordering="NONE"
+side="BOTH"
+
+[[dependencies.dmzprodigy]]
+modId="dragonminez"
+mandatory=true
+versionRange="[2.2,)"
+ordering="AFTER"
+side="BOTH"

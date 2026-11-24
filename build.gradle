@@ -1,0 +1,54 @@
+plugins {
+    id 'java'
+    id 'net.minecraftforge.gradle' version '[6.0.24,6.2)'
+}
+
+version = "1.0.0"
+group = 'com.dmzprodigy'
+
+base {
+    archivesName = 'dmzprodigy'
+}
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+minecraft {
+    mappings channel: 'official', version: '1.20.1'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.20.1-47.4.4'
+}
+
+// Flat repo: all files in one folder. Java files are compiled from here, and every file whose name
+// contains "__" goes into the jar with "__" turned into "/" (META-INF__mods.toml -> META-INF/mods.toml).
+// The files in the "stub" packages (com.dragonminez.*) only exist so this compiles without the DragonMineZ jar.
+// They are NOT put in the jar: the real DragonMineZ classes are used in the game.
+sourceSets {
+    main {
+        java {
+            srcDirs = ['.']
+            include '*.java'
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+jar {
+    exclude 'com/dragonminez/**'
+    from('.') {
+        include '*__*'
+        include 'pack.mcmeta'
+        eachFile { details -> details.path = details.name.replace('__', '/') }
+        includeEmptyDirs = false
+    }
+}
+
+jar.finalizedBy('reobfJar')
