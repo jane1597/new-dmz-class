@@ -12,6 +12,7 @@ import com.dragonminez.common.passives.handlers.UnversedPassive;
 import com.dragonminez.common.passives.handlers.WarriorPassive;
 import com.dragonminez.common.stats.StatsData;
 import com.dragonminez.common.stats.techniques.KiAttackData;
+import org.apache.logging.log4j.LogManager;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -67,8 +68,14 @@ public class ProdigyPassive implements IClassPassive {
     @Override
     public void onPlayerTick(ServerPlayer player, StatsData data) {
         for (IClassPassive p : parts()) p.onPlayerTick(player, data);
-        masteryBonus(player, data);
+        try {
+            masteryBonus(player, data);
+        } catch (Throwable t) {
+            if (!warned) { warned = true; LogManager.getLogger("dmzprodigy").error("[Prodigy] Mastery bonus failed and is turned off for this session", t); }
+        }
     }
+
+    private boolean warned = false;
 
     private void masteryBonus(ServerPlayer player, StatsData data) {
         double bonus = ProdigyCfg.MASTERY_BONUS.get();
@@ -95,7 +102,8 @@ public class ProdigyPassive implements IClassPassive {
                 if (c > 0) {
                     String group = en.getKey().substring(0, c), form = en.getKey().substring(c + 1);
                     var fd = stack ? ConfigManager.getStackForm(group, form) : ConfigManager.getForm(race, group, form);
-                    double max = fd != null ? fd.getMaxMastery() : 100.0;
+                    Double mm = fd != null ? fd.getMaxMastery() : null;
+                    double max = mm != null ? mm : 100.0;
                     fm.addMastery(group, form, (cur - old) * bonus, max);
                     cur = fm.entries().getOrDefault(en.getKey(), cur);
                 }
