@@ -102,6 +102,7 @@ public class ProdigyClass {
         for (String s : new String[]{"STR", "SKP", "RES", "VIT", "PWR", "ENE"}) base.addProperty(s, ProdigyCfg.STAT_VALUE.get());
         out.add("baseStats", base);
 
+        // equal footing: scaling is the average of the 8 classes; TP gain comes from the hidden effect, not from here
         // statScaling: average of every key the classes have
         JsonObject sc = new JsonObject();
         for (String key : keys(src, "statScaling")) sc.addProperty(key, avg(src, "statScaling", key));
@@ -112,6 +113,8 @@ public class ProdigyClass {
             double v = avg(src, null, key);
             if (!Double.isNaN(v)) out.addProperty(key, v);
         }
+        out.addProperty("tpGainMultiplier", 1.0);
+        out.addProperty("tpCostMultiplier", 1.0);
 
         // passive: on, with every number of every class's passive (first one wins when two classes share a name)
         JsonObject passive = new JsonObject();
@@ -179,7 +182,7 @@ public class ProdigyClass {
             }
             if (!root.has("classes") || !root.get("classes").isJsonObject()) continue;
             JsonObject classes = root.getAsJsonObject("classes");
-            if (classes.has(ProdigyPassive.KEY)) continue;
+            if (classes.has(ProdigyPassive.KEY) && !ProdigyCfg.REGENERATE.get()) continue;
             JsonObject made = buildClass(classes);
             if (made == null) continue;
             classes.add(ProdigyPassive.KEY, made);

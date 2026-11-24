@@ -14,6 +14,8 @@ public final class ProdigyCfg {
     public static final ForgeConfigSpec.DoubleValue MASTERY_BONUS;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> PASSIVES;
     public static final ForgeConfigSpec.BooleanValue PALADIN_ON;
+    public static final ForgeConfigSpec.DoubleValue TP_BONUS;
+    public static final ForgeConfigSpec.BooleanValue REGENERATE;
 
     static {
         ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
@@ -33,6 +35,10 @@ public final class ProdigyCfg {
         PALADIN_ON = b.comment("Paladin part (party damage shield + party lifesteal) is done by this mod because DragonMineZ only checks for the exact class \"paladin\".",
                 "Only matters when 'paladin' is in the passives list. Numbers (redirectPct, lifestealPct) are in the class's passive values in stats.json.")
                 .define("paladinPartyEffects", true);
+        TP_BONUS = b.comment("Extra TP gain for Prodigy. 0.25 = +25%. DragonMineZ only supports steps of 0.25, so it is rounded to the nearest step.")
+                .defineInRange("tpGainBonus", 0.25, 0.0, 10.0);
+        REGENERATE = b.comment("true = on the next start, rewrite the Prodigy entry in every race's stats.json from scratch (equal scaling, 10 stats), then set this back to false yourself.")
+                .define("regenerateClassEntry", false);
         SPEC = b.build();
     }
 }
