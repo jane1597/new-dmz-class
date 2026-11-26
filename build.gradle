@@ -3,11 +3,11 @@ plugins {
     id 'net.minecraftforge.gradle' version '[6.0.24,6.2)'
 }
 
-version = "1.4.1"
-group = 'com.dmzprodigy'
+version = "1.8.0"
+group = 'com.reflexguard'
 
 base {
-    archivesName = 'dmzprodigy'
+    archivesName = 'reflexguard'
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
@@ -18,16 +18,20 @@ minecraft {
 
 repositories {
     mavenCentral()
+    maven {
+        url = 'https://cursemaven.com'
+        content { includeGroup 'curse.maven' }
+    }
 }
 
 dependencies {
     minecraft 'net.minecraftforge:forge:1.20.1-47.4.4'
+    // Epic Fight, the exact file your modpack uses (CurseForge project 405076, file 8049910)
+    compileOnly fg.deobf('curse.maven:epic-fight-mod-405076:8049910')
 }
 
 // Flat repo: all files in one folder. Java files are compiled from here, and every file whose name
 // contains "__" goes into the jar with "__" turned into "/" (META-INF__mods.toml -> META-INF/mods.toml).
-// The files in the "stub" packages (com.dragonminez.*) only exist so this compiles without the DragonMineZ jar.
-// They are NOT put in the jar: the real DragonMineZ classes are used in the game.
 sourceSets {
     main {
         java {
@@ -42,7 +46,6 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 jar {
-    exclude 'com/dragonminez/**'
     from('.') {
         include '*__*'
         include 'pack.mcmeta'

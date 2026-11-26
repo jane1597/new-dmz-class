@@ -1,4 +1,4 @@
-name: Build DMZ Prodigy Class
+name: Build Reflex Guard
 
 on:
   push:
@@ -22,10 +22,8 @@ jobs:
         run: |
           unzip -l build/libs/*.jar
           unzip -l build/libs/*.jar | grep "META-INF/mods.toml"
-          unzip -l build/libs/*.jar | grep "com/dmzprodigy/ProdigyClass.class"
-          if unzip -l build/libs/*.jar | grep -q "com/dragonminez/"; then echo "stub classes leaked into the jar"; exit 1; fi
-          unzip -l build/libs/*.jar | grep "assets/dmzprodigy/lang/en_us.json"
+          unzip -l build/libs/*.jar | grep "com/reflexguard/ReflexGuard.class"
       - uses: actions/upload-artifact@v4
         with:
-          name: dmzprodigy-jar
+          name: reflexguard-jar
           path: build/libs/*.jar

@@ -1,4 +1,13 @@
-# DMZ Prodigy Class (DragonMineZ 2.2.1, Forge 1.20.1)
-Adds the **Prodigy** class: 10 in every stat, all 8 class passives at once, +50% form mastery gain, +25% TP gain.
-Needs DragonMineZ installed. On first world start it adds a "prodigy" entry to every config/dragonminez/races/<race>/stats.json and runs /dmzreload config. Settings: config/dmzprodigy-common.toml.
-Build: upload every file in this folder (keep .github/workflows/main.yml) to a GitHub repo, open Actions, download the jar artifact.
+# Reflex Guard 1.7.0 (Forge 1.20.1, needs Epic Fight 20.x)
+
+Automatic Epic Fight parry and dodge. When an enemy attacks you, the mod presses Guard/Parry or Dodge for you
+using Epic Fight's OWN skills: real animations, stamina cost, parry stagger, and Epic Fight events (so mods like
+Dodge Parry Reward see them).
+
+- Needs a Guard/Parry skill and/or a Dodge skill equipped in Epic Fight (skill screen), and Epic Fight mode on.
+- Melee/projectile hits -> Guard/Parry (turns you to face the attacker first). Everything else -> Dodge.
+- Config: config/reflexguard-common.toml
+
+Perfect dodge: hits from behind, or while you are attacking, are dodged automatically (plays the dodge animation and cancels your attack).
+
+Growth (config/reflexguard-growth.toml): cropMultiplier, treeMultiplier, breedingCooldownPercent, babyGrowthMultiplier.
